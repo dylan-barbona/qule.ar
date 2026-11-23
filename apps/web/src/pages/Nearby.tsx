@@ -7,6 +7,7 @@ import { CheckIcon, FilterIcon, PinIcon, RefreshIcon, StarIcon } from "../compon
 import { LOCATION_EVENT, shareLocation } from "../location";
 import { BODY_TYPES, LOOKING_FOR, POSITIONS, RELATIONSHIP, TRIBES } from "../options";
 import { DialogFocus } from "../components/DialogFocus";
+import type { NearbyNavigationState } from "../features/nearby/quickFilter";
 
 export type Filters = {
   ageMin?: number; ageMax?: number;
@@ -34,6 +35,14 @@ function saveFilters(f: Filters) {
   } catch {
     /* sin almacenamiento: los filtros duran lo que dura la pestaña */
   }
+}
+
+function initialFilters(navigationState: NearbyNavigationState): Filters {
+  if (navigationState === null || !("quickFilter" in navigationState)) return loadFilters();
+  const { key, value } = navigationState.quickFilter;
+  const filters: Filters = { ...EMPTY, [key]: [value] };
+  saveFilters(filters);
+  return filters;
 }
 
 function toQuery(f: Filters, offset: number) {
@@ -77,7 +86,7 @@ export function Nearby() {
   const { me, reload } = useMe();
   const { key: entry, state } = useLocation();
   const userId = me?.user.id;
-  const [filters, setFilters] = useState<Filters>(loadFilters);
+  const [filters, setFilters] = useState<Filters>(() => initialFilters(state));
   const [people, setPeople] = useState<NearbyPerson[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<Status>("loading");

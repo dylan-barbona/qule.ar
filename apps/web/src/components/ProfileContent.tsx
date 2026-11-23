@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 import type { PublicProfile } from "../api";
+import { QUICK_FILTER_LABEL, type NearbyNavigationState, type QuickFilterKey } from "../features/nearby/quickFilter";
 
 type CoverProps = {
   photos: string[];
@@ -52,6 +54,23 @@ export function ProfileCover({ photos, displayName, age, status, back }: CoverPr
 
 type StatsInput = Pick<PublicProfile, "about" | "heightCm" | "weightKg" | "bodyType" | "position" | "relationship" | "pronouns" | "hivStatus" | "lastTested" | "tribes" | "lookingFor">;
 
+function FilterBadges({ filterKey, values }: { filterKey: QuickFilterKey; values: string[] }) {
+  const navigate = useNavigate();
+  const openNearby = (value: string) => {
+    const state: NearbyNavigationState = { quickFilter: { key: filterKey, value } };
+    navigate("/cerca", { state });
+  };
+  return (
+    <div className="chips">
+      {values.map((value) => (
+        <button key={value} type="button" className="chip chip--link" aria-label={QUICK_FILTER_LABEL[filterKey](value)} onClick={() => openNearby(value)}>
+          {value}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function ProfileStats({ p, empty = null }: { p: StatsInput; empty?: ReactNode }) {
   const rows: [string, string | null][] = [
     ["Altura", p.heightCm ? `${p.heightCm} cm` : null],
@@ -78,13 +97,13 @@ export function ProfileStats({ p, empty = null }: { p: StatsInput; empty?: React
       {p.tribes.length > 0 && (
         <section className="profile__section">
           <h3>Tribus</h3>
-          <div className="chips">{p.tribes.map((t) => <span key={t} className="chip chip--static">{t}</span>)}</div>
+          <FilterBadges filterKey="tribes" values={p.tribes} />
         </section>
       )}
       {p.lookingFor.length > 0 && (
         <section className="profile__section">
           <h3>Busca</h3>
-          <div className="chips">{p.lookingFor.map((t) => <span key={t} className="chip chip--static">{t}</span>)}</div>
+          <FilterBadges filterKey="lookingFor" values={p.lookingFor} />
         </section>
       )}
     </>
